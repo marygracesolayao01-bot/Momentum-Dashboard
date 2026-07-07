@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Momentum Accounting — Client & Team Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --pink:#cd177b; --pink-soft:#faeaf2; --pink-mid:#f2b8d6;
+  --denim:#063552; --teal:#23879d; --teal-lt:#69b0bf;
+  --gold:#febe10; --orange:#f99f1e; --charcoal:#252625;
+  --grey:#6b6d6b; --line:#e9e6e9; --bg:#f6f4f5; --white:#fff;
+  --ok:#1c8a5b; --warn:#d98a00; --bad:#c62d42;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Montserrat',Calibri,sans-serif;color:var(--charcoal);background:var(--bg);line-height:1.45}
+h1,h2,h3,h4,.font-head{font-family:'Roboto',Arial,sans-serif}
+a{color:var(--pink);text-decoration:none} a:hover{text-decoration:underline}
+button{font-family:inherit;cursor:pointer}
+.topbar{background:var(--white);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;padding:12px 26px;position:sticky;top:0;z-index:50}
+.brand{display:flex;align-items:center;gap:11px}
+.mark{width:34px;height:34px;background:var(--pink);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Roboto';font-weight:900;font-size:19px}
+.brand .wm{font-family:'Roboto';font-weight:700;font-size:17px;color:var(--charcoal);line-height:1}
+.brand .wm span{color:var(--pink)}
+.brand small{display:block;font-size:10px;letter-spacing:.14em;color:var(--grey);font-weight:600;text-transform:uppercase;margin-top:2px}
+.tabs{display:flex;gap:4px;margin-left:24px}
+.tab{border:none;background:none;padding:9px 16px;border-radius:8px;font-weight:600;font-size:13.5px;color:var(--grey)}
+.tab.active{background:var(--pink-soft);color:var(--pink)}
+.tab:hover:not(.active){background:#f0eef0}
+.who{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--grey)}
+.who .av{width:32px;height:32px;border-radius:50%;background:var(--denim);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px}
+.wrap{max-width:1240px;margin:0 auto;padding:26px}
+.view{display:none} .view.active{display:block}
+.smark{font-family:'Montserrat';font-weight:700;text-transform:uppercase;letter-spacing:.13em;font-size:11px;color:var(--pink);margin-bottom:5px}
+.vhead{margin-bottom:20px}
+.vhead h1{font-size:25px;font-weight:700}
+.vhead p{color:var(--grey);font-size:13.5px;margin-top:3px;max-width:760px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 17px}
+.kpi .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--grey);font-weight:600}
+.kpi .val{font-family:'Roboto';font-weight:700;font-size:29px;margin-top:6px;line-height:1}
+.kpi .sub{font-size:11.5px;color:var(--grey);margin-top:4px}
+.kpi.accent{background:var(--denim);border-color:var(--denim)}
+.kpi.accent .lbl,.kpi.accent .sub{color:#b9cdd8}
+.kpi.accent .val{color:#fff}
+.cols{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px}
+.card h3{font-size:15px;font-weight:700;margin-bottom:12px}
+.card canvas{max-height:250px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+.search{flex:1;min-width:220px;position:relative}
+.search input{width:100%;padding:10px 12px 10px 34px;border:1px solid var(--line);border-radius:9px;font-size:13.5px;font-family:inherit;background:#fff}
+.search::before{content:"\2315";position:absolute;left:11px;top:8px;font-size:17px;color:var(--grey)}
+select.f{padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:13px;font-family:inherit;background:#fff;color:var(--charcoal)}
+.count{font-size:12.5px;color:var(--grey);margin-left:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:13px}
+.ccard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:15px;cursor:pointer;transition:.12s;position:relative}
+.ccard:hover{border-color:var(--pink-mid);box-shadow:0 4px 16px rgba(205,23,123,.09);transform:translateY(-2px)}
+.ccard .cname{font-family:'Roboto';font-weight:700;font-size:14.5px;padding-right:8px}
+.ccard .clead{font-size:11.5px;color:var(--grey);margin-top:3px}
+.ccard .crow{display:flex;align-items:center;gap:6px;margin-top:11px;flex-wrap:wrap}
+.badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:3px 8px;border-radius:20px}
+.b-qbo{background:#e5f0e9;color:#1c7a4f} .b-xero{background:#e2f0fa;color:#1275b8}
+.b-live{background:var(--pink);color:#fff} .b-drive{background:#fff4d6;color:#96650a}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.s-ok{background:var(--ok)} .s-warn{background:var(--warn)} .s-bad{background:var(--bad)}
+.stat{font-size:11.5px;color:var(--grey);display:flex;align-items:center;gap:5px}
+.overlay{position:fixed;inset:0;background:rgba(6,53,82,.45);display:none;z-index:100} .overlay.open{display:block}
+.drawer{position:fixed;top:0;right:0;height:100%;width:540px;max-width:95vw;background:#fff;z-index:101;transform:translateX(100%);transition:.25s;overflow-y:auto;box-shadow:-8px 0 30px rgba(0,0,0,.15)} .drawer.open{transform:translateX(0)}
+.dhead{background:var(--denim);color:#fff;padding:22px 24px;position:relative}
+.dhead .mark-sm{width:26px;height:26px;font-size:14px;border-radius:6px;background:var(--pink);display:inline-flex;align-items:center;justify-content:center;font-family:'Roboto';font-weight:900}
+.dhead h2{font-size:20px;font-weight:700;margin:10px 0 4px}
+.dhead .meta{font-size:12.5px;color:#b9cdd8}
+.dclose{position:absolute;top:16px;right:18px;background:rgba(255,255,255,.15);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:16px}
+.dbody{padding:22px 24px}
+.dsec{margin-bottom:22px}
+.dsec .st{font-family:'Montserrat';font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:10.5px;color:var(--pink);margin-bottom:9px;border-bottom:1px solid var(--pink-soft);padding-bottom:5px;display:flex;justify-content:space-between;align-items:center}
+.quicklinks{display:flex;gap:8px;flex-wrap:wrap}
+.qbtn{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;font-weight:600;color:var(--charcoal);background:#fff}
+.qbtn:hover{border-color:var(--pink-mid);text-decoration:none;background:var(--pink-soft)}
+.fin-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+.fin{background:var(--pink-soft);border-radius:9px;padding:11px}
+.fin.livec{background:#eafaf2}
+.fin .l{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--grey);font-weight:600}
+.fin .v{font-family:'Roboto';font-weight:700;font-size:16px;margin-top:3px}
+.fin .v.pos{color:var(--ok)} .fin .v.neg{color:var(--bad)}
+.samp{font-size:10.5px;color:var(--warn);background:#fff7e6;border:1px solid #ffe4a6;padding:6px 9px;border-radius:7px;margin-top:9px}
+.livemsg{font-size:10.5px;color:var(--ok);background:#eafaf2;border:1px solid #b9e6ce;padding:6px 9px;border-radius:7px;margin-top:9px}
+textarea.note,input.note{width:100%;border:1px dashed var(--pink-mid);border-radius:8px;padding:9px 11px;font-family:inherit;font-size:13px;color:var(--charcoal);resize:vertical;background:#fffdfe}
+textarea.note:focus,input.note:focus{outline:none;border-style:solid;border-color:var(--pink)}
+.funfact{background:#fffaf0;border:1px solid #ffe08a;border-radius:9px;padding:4px}
+.tasklist{list-style:none}
+.tasklist li{display:flex;gap:9px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.tasklist li:last-child{border:none}
+.tasklist .td{font-size:11px;color:var(--grey);margin-left:auto;white-space:nowrap}
+.xen{display:flex;align-items:center;gap:10px;padding:11px;border-radius:9px;background:#f2f8fa;border:1px solid #d6e9ee}
+.xen .ring{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Roboto';font-weight:700;font-size:12px;color:#fff}
+.savedmsg{font-size:10.5px;color:var(--ok);opacity:0;transition:.3s} .savedmsg.show{opacity:1}
+.egrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.ecard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:17px}
+.ecard .top{display:flex;gap:13px;align-items:flex-start}
+.ecard .eav{width:48px;height:48px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Roboto';font-weight:700;font-size:17px;flex-shrink:0}
+.ecard .en{font-family:'Roboto';font-weight:700;font-size:15px}
+.ecard .er{font-size:12px;color:var(--pink);font-weight:600}
+.ecard .loc{font-size:11.5px;color:var(--grey);margin-top:1px}
+.ecard .em{font-size:11.5px;color:var(--grey)}
+.pi{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;background:var(--denim);color:#fff;padding:2px 8px;border-radius:20px;margin-top:7px}
+.work{margin-top:11px;font-size:12px;color:var(--charcoal)}
+.work b{color:var(--denim);font-weight:600}
+.work .row{margin-top:5px}
+.files{margin-top:13px;padding-top:13px;border-top:1px solid var(--line)}
+.files .flbl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--grey);font-weight:600;margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{font-size:11.5px;padding:6px 10px;border-radius:7px;background:var(--pink-soft);color:var(--pink);font-weight:600;border:1px solid transparent}
+.chip:hover{border-color:var(--pink-mid);text-decoration:none}
+.ecard .assigned{font-size:11.5px;color:var(--grey);margin-top:12px}
+.portal-login{max-width:400px;margin:36px auto;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.portal-login .ph{background:var(--denim);color:#fff;padding:26px 28px;text-align:center}
+.portal-login .ph .mark{margin:0 auto 12px}
+.portal-login .ph h2{font-size:19px;font-weight:700}
+.portal-login .ph p{font-size:12.5px;color:#b9cdd8;margin-top:4px}
+.portal-login .pb{padding:24px 28px}
+.portal-login label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--grey);font-weight:600;margin:12px 0 5px}
+.portal-login input{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:14px}
+.portal-login .go{width:100%;margin-top:20px;background:var(--pink);color:#fff;border:none;padding:12px;border-radius:9px;font-weight:700;font-size:14px}
+.portal-login .go:hover{background:#b31369}
+.perr{color:var(--bad);font-size:12.5px;margin-top:12px;min-height:16px}
+.demo-help{margin-top:16px;font-size:11.5px;color:var(--grey);background:var(--pink-soft);border-radius:9px;padding:11px 13px}
+.demo-help code{background:#fff;padding:1px 5px;border-radius:4px;font-size:11px;color:var(--pink)}
+.pdash{display:none} .pdash.active{display:block}
+.pbar{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.pbar h2{font-size:18px;font-weight:700}
+.pbar .badge{margin-left:6px}
+.logout{margin-left:auto;background:none;border:1px solid var(--line);border-radius:8px;padding:8px 14px;font-weight:600;font-size:12.5px;color:var(--grey)}
+.logout:hover{border-color:var(--pink-mid);color:var(--pink)}
+.footnote{text-align:center;color:var(--grey);font-size:11px;margin-top:34px;padding-top:16px;border-top:1px solid var(--line)}
+.hidden{display:none!important}
+@media(max-width:820px){.cols{grid-template-columns:1fr}.tabs{margin-left:8px}.wrap{padding:16px}.who .txt{display:none}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="mark">M.</div>
+    <div><div class="wm">momentum <span>accounting</span></div><small>Client &amp; Team Hub</small></div>
+  </div>
+  <nav class="tabs">
+    <button class="tab active" data-view="overview">Overview</button>
+    <button class="tab" data-view="clients">Clients</button>
+    <button class="tab" data-view="employees">Team</button>
+    <button class="tab" data-view="portal">Client Portal</button>
+  </nav>
+  <div class="who"><span class="txt">Mary Solayao</span><div class="av">MS</div></div>
+</div>
+
+<div class="wrap">
+  <section class="view active" id="overview">
+    <div class="vhead"><div class="smark">Firm Overview</div><h1>Practice at a glance</h1>
+      <p>Roster = <b>active Teamwork projects</b> (internal projects excluded), plus the team. Live financials: <b>BroadVision</b> (QuickBooks), <b>Local Studio</b> &amp; <b>Kennedy Events</b> (Drive month-end statements). Other clients show illustrative samples until connected.</p>
+    <div class="kpis" id="kpis"></div>
+    <div class="cols">
+      <div class="card"><h3>Clients by accounting system</h3><canvas id="sysChart"></canvas></div>
+      <div class="card"><h3>Client load by team lead</h3><canvas id="leadChart"></canvas></div>
+    </div>
+    <div class="card" style="margin-top:16px"><h3>&#9873; Needs attention</h3><div id="attention"></div></div>
+  </section>
+
+  <section class="view" id="clients">
+    <div class="vhead"><div class="smark">Clients</div><h1>Client directory</h1>
+      <p>Click any client for their Drive folder, financial snapshot, open Teamwork tasks, month-end (Xenett) status, summary and a fun fact. A gold &#128193; badge means the real Drive folder is linked.</p></div>
+    <div class="toolbar">
+      <div class="search"><input id="csearch" placeholder="Search clients…"></div>
+      <select class="f" id="fsys"><option value="">All systems</option><option value="QBO">QuickBooks</option><option value="Xero">Xero</option></select>
+      <select class="f" id="flead"><option value="">All leads</option></select>
+      <select class="f" id="fstat"><option value="">All statuses</option><option value="ok">On track</option><option value="warn">Watch</option><option value="bad">Needs attention</option></select>
+      <span class="count" id="ccount"></span>
+    </div>
+    <div class="grid" id="cgrid"></div>
+  </section>
+
+  <section class="view" id="employees">
+    <div class="vhead"><div class="smark">Team</div><h1>Team directory</h1>
+      <p>The Momentum team, with role, location, working style and "how to work with me" pulled from the Guide to Me deck. Roles and file links are editable — changes save in this browser.</p></div>
+    <div class="egrid" id="egrid"></div>
+  </section>
+
+  <section class="view" id="portal">
+    <div class="vhead"><div class="smark">Client Portal</div><h1>Client financial access</h1>
+      <p>Demo of a client-facing login. A client signs in and sees <b>only their own</b> financial dashboard. This prototype checks credentials in the browser — a live version needs a hosted app with real authentication (see the scoping doc).</p></div>
+    <div id="ploginWrap">
+      <div class="portal-login">
+        <div class="ph"><div class="mark">M.</div><h2>Client Login</h2><p>Momentum Accounting financial portal</p></div>
+        <div class="pb">
+          <label>Username</label><input id="pu" autocomplete="off" placeholder="e.g. broadvision-marketing">
+          <label>Password</label><input id="pp" type="password" placeholder="••••••••">
+          <button class="go" onclick="portalLogin()">Sign in</button>
+          <div class="perr" id="perr"></div>
+          <div class="demo-help" id="demoHelp"></div>
+        </div>
+      </div>
+    </div>
+    <div class="pdash" id="pdash"></div>
+  </section>
+
+  <div class="footnote">Momentum Accounting · Client &amp; Team Hub · Snapshot built <span id="builtdate"></span>. BroadVision = live QuickBooks; all other financials are sample data pending per-client QBO/Xero connection.</div>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer"></div>
+
+<script>
+/* ---------- TEAM (from "Momentum Team — Guide to Me" deck; Jonalyn removed, Clarize added) ---------- */
+const TEAM=[
+ {f:"Nikole",l:"Mackenzie",id:182427,role:"President & Founder",loc:"San Rafael, CA (PST)",pi:"Persuader · Social",
+  comm:"Scheduled verbal check-ins with an agenda; keep writing for quick answers only.",works:"Big-picture idea generator who energizes the team and moves fast."},
+ {f:"Ramona",l:"Rednic",id:187237,role:"Controller",loc:"Walnut Creek, CA (PST)",pi:"Specialist · Analytical",
+  comm:"Clear, concise, written when possible; give the ‘why’ and time to process.",works:"Analytical and detail-oriented; thrives with focus time and structure."},
+ {f:"Ashley",l:"Duke",id:228513,role:"Accounting Manager",loc:"Waddell, AZ (PST)",pi:"Strategist · Analytical",
+  comm:"Direct and concise; lead with data and add written follow-ups.",works:"Strategic and results-driven; wants autonomy to own projects end-to-end."},
+ {f:"Jen",l:"Hoover",id:280106,role:"CAS Team Lead",loc:"Lathrop, CA (PST)",pi:"Operator · Stabilizing",
+  comm:"Clear, kind, written follow-ups with context.",works:"Reliable, thorough and calm; prefers a steady pace and clear direction."},
+ {f:"Mary",l:"Solayao",id:390298,role:"Bookkeeper",loc:"Tagaytay, Cavite, PH (PHT)",pi:"Guardian · Stabilizing",
+  comm:"Clear, calm and specific; give time to process before responding.",works:"Steady, precise and process-driven; does things right, not rushed."},
+ {f:"Mark",l:"Mangali",id:386115,role:"Accountant",loc:"Paranaque, Metro Manila (PHT)",pi:"Specialist · Analytical",
+  comm:"Clear, specific and thorough; written instructions welcome.",works:"Methodical and accurate; asks clarifying questions to stay aligned."},
+ {f:"Milli",l:"Bruce",id:388910,role:"Head of Growth",loc:"San Francisco, CA (PST)",pi:"Maverick · Social",
+  comm:"Direct and thoughtful; voice notes/async fine — skip the small talk.",works:"Fast-moving strategist-operator who connects dots and drives momentum."},
+ {f:"Meagan",l:"Green",id:390733,role:"Onboarding Manager",loc:"Carsonville, MI (EST)",pi:"Collaborator · Social",
+  comm:"Clear and respectful; regular check-ins over ambiguity.",works:"Empathetic, dependable team player who values harmony."},
+ {f:"Courtney",l:"Lake",id:485992,role:"Senior Accountant",loc:"Tampa, FL (EST)",pi:"Persuader · Social",
+  comm:"Open and conversational; share the ‘why’ and the big picture.",works:"High-energy connector who motivates and drives toward goals."},
+ {f:"Jamie",l:"Eley",id:486559,role:"Onboarding Lead",loc:"Rockton, IL (CST)",pi:"Guardian · Stabilizing",
+  comm:"Clear expectations and timelines; written follow-ups help.",works:"Organized and steady; builds structure and improves workflows."},
+ {f:"April",l:"Holares",id:487292,role:"AP & Bookkeeping Specialist",loc:"Bulacan, PH (PHT)",pi:"Guardian",
+  comm:"Clear written bullets (Slack/email); context first, then the ask.",works:"Reliable and organized; careful review to avoid errors."},
+ {f:"Clarize",l:"Ronquillo",id:489150,role:"Bookkeeper",loc:"Philippines (PHT)",pi:"",
+  comm:"",works:"Bookkeeping support on the CAS team."}
+];
+
+/* ---------- CLIENTS = ACTIVE Teamwork projects (internal/dupe projects excluded). [name, projectId] ---------- */
+const RAW=[
+["AppTweak",633074],["Balloon Tech",711641],["Bay Area Bin Support",677126],["BeDestined (Destined)",639032],
+["Brian Benjamin Madden, Inc.",636881],["BroadVision Marketing LLC (Jaco's Co)",677104],["Brown Pelican Wifi",710357],
+["Calvin Kippen Properties",741888],["CCS Cleaning & Restoration",745593],["Chef's Press",633855],
+["CJ Kippen Properties",741889],["Cogent Valuation",635407],["Commence Studio",689806],["Creativity, Inc.",730571],
+["Critical Control",633539],["CRT Solutions LLC",643869],["Culligan of Marin",758737],["DMI Tools",741883],
+["DrivenData",741743],["Durno Inc",741887],["EGGRS, LLC",754714],["ESOX",637015],["Evolution Equity",633540],
+["F45 (Alleycat)",719936],["Ferrari Moe",639071],["Good Machine",704812],["Great Question",637916],
+["Gueco Real Estate",637903],["Guideway Care",707874],["Headshots, Inc.",725888],["Hero Rental LLC",688411],
+["Kennedy Events",719549],["Kindred Motorworks",742257],["Kip Bros Workhouse",741890],["Kippen Concrete Company",741884],
+["Kippen Entities",738820],["Kippen Excavation",741886],["Kippen Leasing",741891],["LearnLux",665279],
+["Local Studio",637032],["Lucas Nealan/Exotic Matters Holding",636856],["McAdams Fish",740786],["Milia Marketing",703154],
+["Moodworks, Inc.",740854],["Pelagic Data Systems",711642],["People415",633550],["Pivot Agency",711648],
+["Project 13 Gyms/CO",633095],["Reefgen",711643],["Rep Cap",728449],["Restore Serve",744954],["Roc Diamond",741882],
+["Rocky Hill Electric",674745],["Savepoint",711803],["Sequence Health",712852],["Seventy Hospitality Group",744104],
+["Somo AI",726758],["Southwest Fluid Products, Inc",744463],["Strategyn/ODI (Payroll Only)",633881],
+["Sycamore Valley Landscape LLC",637920],["Three Suns",750469],["Token Transit",681817],["Trailblazers Wealth",754715],
+["Vairex (Eberspaecher Victori, LLC)",708513],["Vertical Athletics",680114],["Waldron Partners LLC",729691],
+["Willow Commons",712635]
+];
+
+/* ---------- Real Drive folders (client name -> Google Drive folder id) ---------- */
+const DRIVE={
+"AppTweak":"15MPiWlxiKfgK2PplKGJTqBpd60zdVLS-","Balloon Tech":"1GsEIFSuMQyl5m8eULbTvIiUv8rpdy8cP",
+"Bay Area Bin Support":"1BhA8roYvO6QSxgC4u1R5iTeIAg4lQvMl","BeDestined (Destined)":"1H33y-yRj3_0bj8FS2U3leeEaEVwJLCbQ",
+"Brian Benjamin Madden, Inc.":"1CHlK0aZoimiEiFjvAh6qP3foUTnYuYto","BroadVision Marketing LLC (Jaco's Co)":"1r6u4sOigF5digXByVvLZSytErWyhL8ZR",
+"Brown Pelican Wifi":"1MZ_s1WqGfdiyaByRsHCPhThDjpPu7pPQ","CCS Cleaning & Restoration":"1FyxcttEs29qUk6IqlVkP7Ue9BoEHPitr",
+"Chef's Press":"1BFLMCWvH2f_6ZzgEY9Hkn-sxUabTqDeC","Cogent Valuation":"1GkgDd1ahAfmnRENeUNIZLayQiWjh5rMw",
+"Commence Studio":"1nroLxQaI7Wd5XztopP1PKHi_cQBtAOg7","Creativity, Inc.":"1F1W5_Jkfw9rB0zhbYWOn3OaHaFJciPHN",
+"Critical Control":"1_n4qzfqv7YT9Cp9enB2cfP2L6qwz4jKE","CRT Solutions LLC":"11XnoJG86WYTdmRt7VOkwUjwa4UUa7P25",
+"EGGRS, LLC":"1LjC6toH1LfnG84xhmsOLNpYPfUYjuXJf","ESOX":"1Sp_GLR_0uk_cU8lhWO7VOgvqW8ApHvGD",
+"F45 (Alleycat)":"1-ApLESpz9tzTTrTL_boAnXslspl5VVzv","Ferrari Moe":"1qCjDVJlTDfmXWQr-DkREdqby10ffCEOs",
+"Good Machine":"1Oa9FlXHiQmVhPc8aMdYClEHHouu5gePx","Great Question":"1S4eLIXu0vCUNRzl7iZlxxcf5GGjF2NGM",
+"Gueco Real Estate":"1e891Y_wxoIliln59d9m6FWacAE_u9t_r","Headshots, Inc.":"1YJjDh0_bx-od5raMMWp65EM4xflO4qey",
+"Hero Rental LLC":"1e5G2UmttwETVlTYlUU20R7-VMTaYaYvh","Kennedy Events":"1_K3dEDivfpQjHG_xHzeSK4KjIQvqQpLj",
+"Kindred Motorworks":"1SE1KKpKfh4gMtiQldcAI5OupltHXCoLn","Kippen Entities":"1x_o9pD8QxrP2ADx7e6ru7Bo3CzWWBPoi",
+"Local Studio":"1o8UXM-FYDtK99qsdd7m3hBt4CnFmtdVQ","Lucas Nealan/Exotic Matters Holding":"1vhD9umZJn78TAU30I6z8PMQn7t4BiHF-",
+"McAdams Fish":"1agwnNLDBcBXd6JAyZKs5LHEHH0bhLUOx","Milia Marketing":"1orDB1opsvPnjnJ6Pg5Uu-dbnIICjizMp",
+"Moodworks, Inc.":"1mHAnsi6h9Z6Wp95ij9ZQy1OJ05dIwT4d","Pelagic Data Systems":"1XkIrys6GaeX-bk7TgnVKLO9v2QS7N0HU",
+"People415":"1YYMmAZnFMiV8bhkvEhRQ7F8ihr599L11","Pivot Agency":"1fM4u1ktueDzIkHWoXZYHzPPr3GHtK7qy",
+"Project 13 Gyms/CO":"1-ZLUjjcYwje9kWgpF6T3D4pedFiQJ4Ro","Reefgen":"1Puc3SqVyBKBmtMP2rQ48G7FnCj5Sw6Nd",
+"Rep Cap":"1UlQoboWeJA8gjXm_4ztGTMwKcnLBXY69","Restore Serve":"1tZXIq6S-CW_r2ca6G08f69nT_PtPFrCK",
+"Rocky Hill Electric":"1t2WpLTeXuTBWDNecTg9n6MgzW66RwsFn","Savepoint":"1El4ZZSkdpSNjMUJyt1eBPc29eBn7gdAX",
+"Seventy Hospitality Group":"1RgvqaA_TSSQ-CX2zOePIaPlbPmB7JdcI","Somo AI":"1n_Pp-LN5aNhkuGB_o0d2WJN1XjF11QY7",
+"Southwest Fluid Products, Inc":"1QXO1c3Ta1yg6NNJvkt-WCraLETswKzGu","Strategyn/ODI (Payroll Only)":"12LF9jUmksXtqT5Uvb3PtQmPKfL6gt5O0",
+"Sycamore Valley Landscape LLC":"1zx_mzGasE8K7RX1cMuE0Un5sFS31sAur","Three Suns":"1m1ly9zY6CcoCXYDZainHRBQPFb8tJGSp",
+"Token Transit":"1j67AF_BWskUkNBMlXIP8zD1dgyBllrXU","Trailblazers Wealth":"1ZI6aHlZ532ebTjlUTewQTZtE1Rxjddt7",
+"Vairex (Eberspaecher Victori, LLC)":"1wNpuCDgiWDzeH0_8MN7J4tMikQ0QZ7fN","Waldron Partners LLC":"1nSKnxAMsD_bddbTn3DdCEyFhgr2IkXIz",
+"Willow Commons":"1CoaMepxlLPoxa2r7kT8N_BzNbOqCnEA6"
+};
+
+/* ---------- LIVE QuickBooks snapshot for BroadVision Marketing LLC (as of 2026-07-07) ---------- */
+const LIVE={"BroadVision Marketing LLC (Jaco's Co)":{
+  cash:6570.08, ar:7030, ap:0, cc:22781.22, assets:14315.95, liab:27095.84, equity:-12779.89,
+  netYTD:-1729.68, currentRatio:0.53, asOf:"2026-07-07",
+  aging:[{n:"McLaughlin Sanchez",a:4500},{n:"Wavefront Software",a:1500},{n:"LMA Consulting",a:1030}]
+}};
+
+/* ---------- LIVE financials read from Drive month-end statements ---------- */
+const DRIVEFIN={
+ "Local Studio":{label:"Drive month-end P&L",asOf:"May 31, 2026",fileId:"1x6MzkgKfC3mHglSp9_3-9f7FjKWHeg_wapKBbpmGW5c",
+   moRev:76918.92,moNet:14060.80,ytdRev:225686.97,ytdNet:26592.61,grossYTD:71222.75,
+   months:["Jan","Feb","Mar","Apr","May"],rev:[43265.41,29405.64,24364.49,51732.51,76918.92],net:[14545.56,-3067.89,-14748.65,15802.79,14060.80]},
+ "Kennedy Events":{label:"Drive P&L by customer (YTD)",asOf:"Jun 25, 2026",fileId:"10iOk53-hOEP5ccKj-HzOoCYkUGUaouhrSFSbmyESkpU",
+   ytdRev:937389,grossYTD:402124}
+};
+
+function rng(seed){let x=Math.sin(seed)*10000;return x-Math.floor(x);}
+const funPool=["Started in a garage before scaling to a real office.","Team does a monthly volunteer day.","Founder is a former pro athlete.","Ships to customers in 30+ countries.","Named after the founder's dog.","Runs entirely on a 4-day work week.","Has a rooftop garden at HQ.","Won a local 'best place to work' award.","Every new hire gets a custom mug.","Started as a weekend side project.","Founder wrote a book about the industry."];
+const twTasks=[["Reconcile bank feed","2 days"],["Month-end close review","Fri"],["Categorize uncategorized txns","Overdue"],["Upload payroll journal","Mon"],["AP bills approval","Today"],["Prep management report","3 days"],["Confirm loan balance","Next wk"]];
+
+/* ---------- Real leads (POC) from Teamwork project categories ---------- */
+const LEADS={};
+[["Ashley Duke",["AppTweak","Bay Area Bin Support","BeDestined (Destined)","Brian Benjamin Madden, Inc.","BroadVision Marketing LLC (Jaco's Co)","CCS Cleaning & Restoration","Cogent Valuation","Creativity, Inc.","CRT Solutions LLC","Evolution Equity","F45 (Alleycat)","Ferrari Moe","Headshots, Inc.","McAdams Fish","Milia Marketing","People415","Rep Cap","Vairex (Eberspaecher Victori, LLC)","Willow Commons"]],
+["Mary Solayao",["Chef's Press","ESOX","Gueco Real Estate","Local Studio","Lucas Nealan/Exotic Matters Holding","Project 13 Gyms/CO","Sycamore Valley Landscape LLC"]],
+["Meagan Green",["Culligan of Marin","Kindred Motorworks","Three Suns"]],
+["Ramona Rednic",["Balloon Tech","Critical Control","Good Machine","Pelagic Data Systems","Pivot Agency","Reefgen","Savepoint","Somo AI","Southwest Fluid Products, Inc"]],
+["Courtney Lake",["Calvin Kippen Properties","CJ Kippen Properties","DMI Tools","DrivenData","Durno Inc","Kennedy Events","Kip Bros Workhouse","Kippen Concrete Company","Kippen Entities","Kippen Excavation","Kippen Leasing","Moodworks, Inc.","Restore Serve","Roc Diamond","Seventy Hospitality Group","Strategyn/ODI (Payroll Only)","Token Transit","Waldron Partners LLC"]]
+].forEach(([lead,names])=>names.forEach(n=>LEADS[n]=lead));
+
+/* ---------- Xero clients (detected from Xero-format statements in Drive) ---------- */
+const XERO=new Set(["People415","Lucas Nealan/Exotic Matters Holding","Local Studio","Vairex (Eberspaecher Victori, LLC)","Southwest Fluid Products, Inc","Brian Benjamin Madden, Inc."]);
+
+const CLIENTS=RAW.map(r=>{
+  const seed=r[1]; const system=XERO.has(r[0])?"Xero":"QBO";
+  const live=LIVE[r[0]]||null; const driveFin=DRIVEFIN[r[0]]||null; const real=live||driveFin;
+  const rev=Math.round((rng(seed)*440+30)*1000);
+  const net=Math.round(rev*(rng(seed+7)*0.35+0.03));
+  const cash=Math.round((rng(seed+3)*260+15)*1000);
+  const ar=Math.round((rng(seed+5)*90+3)*1000);
+  const ap=Math.round((rng(seed+9)*70+2)*1000);
+  const s=rng(seed+11); const status=real?"ok":(s>0.78?"bad":(s>0.5?"warn":"ok"));
+  const lead=LEADS[r[0]]||"Unassigned";
+  const close=status==="ok"?100:(status==="warn"?Math.floor(rng(seed+17)*30+55):Math.floor(rng(seed+17)*45+10));
+  return {name:r[0],id:seed,system,rev,net,cash,ar,ap,status,live,driveFin,
+    lead,fun:funPool[Math.floor(rng(seed+21)*funPool.length)],
+    tasks:twTasks.filter((t,k)=>rng(seed+30+k)>0.45).slice(0,4),close,
+    drive:DRIVE[r[0]]||null,
+    user:r[0].toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,24)};
+});
+
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+const money=n=>(n<0?"-$":"$")+Math.abs(Math.round(n)).toLocaleString();
+const store={get:(k,d)=>{try{return JSON.parse(localStorage.getItem("mom_"+k))??d}catch(e){return d}},set:(k,v)=>localStorage.setItem("mom_"+k,JSON.stringify(v))};
+const statLabel={ok:"On track",warn:"Watch",bad:"Needs attention"};
+const getSys=c=>store.get("sys_"+c.user,c.system);
+function toggleSys(user){const c=CLIENTS.find(x=>x.user===user);const cur=getSys(c);store.set("sys_"+c.user,cur==="Xero"?"QBO":"Xero");openDrawer(user);renderClients();renderOverview();}
+const initials=n=>n.split(" ").filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+document.getElementById("builtdate").textContent=new Date().toLocaleDateString(undefined,{month:"long",day:"numeric",year:"numeric"});
+
+$$(".tab").forEach(t=>t.onclick=()=>{
+  $$(".tab").forEach(x=>x.classList.remove("active"));t.classList.add("active");
+  $$(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById(t.dataset.view).classList.add("active");
+});
+
+function renderOverview(){
+  ["sysChart","leadChart"].forEach(id=>{const ex=Chart.getChart(id);if(ex)ex.destroy();});
+  const qbo=CLIENTS.filter(c=>getSys(c)==="QBO").length, xero=CLIENTS.length-qbo;
+  const needs=CLIENTS.filter(c=>c.status==="bad").length;
+  const mapped=CLIENTS.filter(c=>c.drive).length;
+  $("#kpis").innerHTML=`
+    <div class="kpi accent"><div class="lbl">Active clients</div><div class="val">${CLIENTS.length}</div><div class="sub">from Teamwork</div></div>
+    <div class="kpi"><div class="lbl">QuickBooks</div><div class="val" style="color:#1c7a4f">${qbo}</div><div class="sub">on QBO</div></div>
+    <div class="kpi"><div class="lbl">Xero</div><div class="val" style="color:#1275b8">${xero}</div><div class="sub">on Xero</div></div>
+    <div class="kpi"><div class="lbl">Team</div><div class="val" style="color:var(--pink)">${TEAM.length}</div><div class="sub">members</div></div>
+    <div class="kpi"><div class="lbl">Drive folders</div><div class="val" style="color:#96650a">${mapped}</div><div class="sub">mapped</div></div>
+    <div class="kpi"><div class="lbl">Needs attention</div><div class="val" style="color:var(--bad)">${needs}</div><div class="sub">flagged</div></div>`;
+  new Chart($("#sysChart"),{type:"doughnut",data:{labels:["QuickBooks","Xero"],datasets:[{data:[qbo,xero],backgroundColor:["#1c8a5b","#23879d"],borderWidth:0}]},options:{plugins:{legend:{position:"bottom"}},cutout:"62%"}});
+  const byLead={};CLIENTS.forEach(c=>byLead[c.lead]=(byLead[c.lead]||0)+1);
+  const le=Object.entries(byLead).sort((a,b)=>b[1]-a[1]);
+  new Chart($("#leadChart"),{type:"bar",data:{labels:le.map(x=>x[0].split(" ")[0]),datasets:[{data:le.map(x=>x[1]),backgroundColor:"#cd177b",borderRadius:5}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0}}}}});
+  const at=CLIENTS.filter(c=>c.status==="bad").slice(0,10);
+  $("#attention").innerHTML=at.length?at.map(c=>`<div class="tasklist"><li onclick="openDrawer('${c.user}')" style="cursor:pointer"><span class="dot s-bad"></span><b>${c.name}</b> — month-end close ${c.close}% · lead ${c.lead}<span class="td">Open →</span></li></div>`).join(""):"<p style='color:var(--grey);font-size:13px'>All clients on track.</p>";
+}
+
+function renderLeadFilter(){
+  const leads=[...new Set(CLIENTS.map(c=>c.lead))].sort();
+  $("#flead").innerHTML='<option value="">All leads</option>'+leads.map(l=>`<option>${l}</option>`).join("");
+}
+function clientCard(c){
+  const sys=getSys(c);
+  return `<div class="ccard" onclick="openDrawer('${c.user}')">
+    <div class="cname">${c.name}</div>
+    <div class="clead">Lead · ${c.lead}</div>
+    <div class="crow">
+      <span class="badge ${sys==="Xero"?"b-xero":"b-qbo"}">${sys==="Xero"?"Xero":"QuickBooks"}</span>
+      ${(c.live||c.driveFin)?'<span class="badge b-live">Live</span>':''}
+      ${c.drive?'<span class="badge b-drive">&#128193;</span>':''}
+      <span class="stat"><span class="dot s-${c.status}"></span>${statLabel[c.status]}</span>
+    </div>
+  </div>`;
+}
+function renderClients(){
+  const q=$("#csearch").value.toLowerCase(),fs=$("#fsys").value,fl=$("#flead").value,ft=$("#fstat").value;
+  const list=CLIENTS.filter(c=>(!q||c.name.toLowerCase().includes(q))&&(!fs||c.system===fs)&&(!fl||c.lead===fl)&&(!ft||c.status===ft));
+  $("#cgrid").innerHTML=list.map(clientCard).join("")||"<p style='color:var(--grey)'>No clients match.</p>";
+  $("#ccount").textContent=list.length+" of "+CLIENTS.length+" clients";
+}
+["csearch","fsys","flead","fstat"].forEach(id=>$("#"+id).addEventListener("input",renderClients));
+
+function finBlock(c){
+  if(c.live){const L=c.live;
+    return `<div class="fin-grid">
+      <div class="fin livec"><div class="l">Cash</div><div class="v">${money(L.cash)}</div></div>
+      <div class="fin livec"><div class="l">A/R</div><div class="v">${money(L.ar)}</div></div>
+      <div class="fin livec"><div class="l">A/P</div><div class="v">${money(L.ap)}</div></div>
+      <div class="fin livec"><div class="l">Credit cards</div><div class="v neg">${money(L.cc)}</div></div>
+      <div class="fin livec"><div class="l">Net income YTD</div><div class="v ${L.netYTD>=0?'pos':'neg'}">${money(L.netYTD)}</div></div>
+      <div class="fin livec"><div class="l">Current ratio</div><div class="v">${L.currentRatio}</div></div>
+    </div>
+    <div class="livemsg">&#9679; LIVE from QuickBooks — balance sheet as of ${L.asOf}. Equity ${money(L.equity)}; total liabilities ${money(L.liab)}.</div>`;
+  }
+  if(c.driveFin){const D=c.driveFin;
+    return `<div class="fin-grid">
+      <div class="fin livec"><div class="l">Revenue (mo)</div><div class="v">${D.moRev!=null?money(D.moRev):'—'}</div></div>
+      <div class="fin livec"><div class="l">Net (mo)</div><div class="v ${D.moNet>=0?'pos':'neg'}">${D.moNet!=null?money(D.moNet):'—'}</div></div>
+      <div class="fin livec"><div class="l">Revenue YTD</div><div class="v">${money(D.ytdRev)}</div></div>
+      <div class="fin livec"><div class="l">Net YTD</div><div class="v ${D.ytdNet>=0?'pos':'neg'}">${D.ytdNet!=null?money(D.ytdNet):'—'}</div></div>
+      <div class="fin livec"><div class="l">Gross profit YTD</div><div class="v">${D.grossYTD!=null?money(D.grossYTD):'—'}</div></div>
+      <div class="fin livec"><div class="l">Margin YTD</div><div class="v">${D.ytdNet!=null?Math.round(D.ytdNet/D.ytdRev*100)+'%':'—'}</div></div>
+    </div>
+    <div class="livemsg">&#9679; LIVE from Drive — ${D.label}, ${D.asOf}. <a href="https://docs.google.com/spreadsheets/d/${D.fileId}/edit" target="_blank">Open statement</a></div>`;
+  }
+  return `<div class="fin-grid">
+      <div class="fin"><div class="l">Revenue</div><div class="v">${money(c.rev)}</div></div>
+      <div class="fin"><div class="l">Net income</div><div class="v ${c.net>=0?'pos':'neg'}">${money(c.net)}</div></div>
+      <div class="fin"><div class="l">Cash</div><div class="v">${money(c.cash)}</div></div>
+      <div class="fin"><div class="l">A/R</div><div class="v">${money(c.ar)}</div></div>
+      <div class="fin"><div class="l">A/P</div><div class="v">${money(c.ap)}</div></div>
+      <div class="fin"><div class="l">Margin</div><div class="v">${Math.round(c.net/c.rev*100)}%</div></div>
+    </div>
+    <div class="samp">&#9888; Sample figures. Connect ${getSys(c)} or add a month-end statement in Drive to pull live numbers.</div>`;
+}
+function openDrawer(user){
+  const c=CLIENTS.find(x=>x.user===user);if(!c)return;
+  const sys=getSys(c);
+  const drive=c.drive?("https://drive.google.com/drive/folders/"+c.drive):("https://drive.google.com/drive/search?q="+encodeURIComponent(c.name));
+  const tw="https://momentumaccounting.teamwork.com/app/projects/"+c.id;
+  const noteKey="sum_"+c.user, funKey="fun_"+c.user;
+  const savedSum=store.get(noteKey,""), savedFun=store.get(funKey,c.fun);
+  const ring=c.close>=100?"#1c8a5b":(c.close>=55?"#febe10":"#c62d42");
+  const agingHtml=c.live&&c.live.aging.length?`<div class="dsec"><div class="st">Open receivables (live)</div><ul class="tasklist">${c.live.aging.map(a=>`<li>${a.n}<span class="td">${money(a.a)} · 1-30 days</span></li>`).join("")}</ul></div>`:"";
+  $("#drawer").innerHTML=`
+    <div class="dhead">
+      <button class="dclose" onclick="closeDrawer()">×</button>
+      <span class="mark-sm">M.</span>
+      <h2>${c.name}</h2>
+      <div class="meta">${sys==="Xero"?"Xero":"QuickBooks Online"} · Lead: ${c.lead} · <span style="color:${ring}">${statLabel[c.status]}</span></div>
+    </div>
+    <div class="dbody">
+      <div class="dsec"><div class="st">Quick links</div>
+        <div class="quicklinks">
+          <a class="qbtn" href="${drive}" target="_blank">&#128193; ${c.drive?"Drive folder":"Drive (search)"}</a>
+          <a class="qbtn" href="${tw}" target="_blank">&#10003; Teamwork project</a>
+          <button class="qbtn" onclick="toggleSys('${c.user}')">&#128202; ${sys} — switch</button>
+        </div>
+      </div>
+      <div class="dsec"><div class="st">Recent financials ${(c.live||c.driveFin)?'<span class="badge b-live">Live</span>':'<span style="color:var(--grey);font-weight:600">monthly</span>'}</div>
+        ${finBlock(c)}
+      </div>
+      ${agingHtml}
+      <div class="dsec"><div class="st">Month-end close · Xenett</div>
+        <div class="xen"><div class="ring" style="background:${ring}">${c.close}%</div>
+          <div><b>${c.close>=100?"Reviewed & clean":(c.close>=55?"In review":"Behind — needs work")}</b>
+          <div style="font-size:11.5px;color:var(--grey)">${c.close>=100?"No open review flags in Xenett.":c.close>=55?"A few items flagged in Xenett.":"Multiple open flags — prioritize."}</div></div>
+        </div>
+      </div>
+      <div class="dsec"><div class="st">Open Teamwork tasks</div>
+        <ul class="tasklist">${c.tasks.length?c.tasks.map(t=>`<li><span class="dot ${t[1]==="Overdue"||t[1]==="Today"?"s-bad":"s-warn"}"></span>${t[0]}<span class="td">${t[1]}</span></li>`).join(""):"<li style='color:var(--grey)'>No open tasks 🎉</li>"}</ul>
+      </div>
+      <div class="dsec"><div class="st">Mini summary</div>
+        <textarea class="note" rows="3" placeholder="Add a short summary of this client — scope, cadence, quirks…" oninput="saveNote('${noteKey}',this.value,'ss_${c.user}')">${savedSum}</textarea>
+        <span class="savedmsg" id="ss_${c.user}">saved ✓</span>
+      </div>
+      <div class="dsec"><div class="st">✨ Fun fact</div>
+        <div class="funfact"><input class="note" value="${savedFun.replace(/"/g,'&quot;')}" placeholder="Something fun about this client…" oninput="saveNote('${funKey}',this.value,'ff_${c.user}')"></div>
+        <span class="savedmsg" id="ff_${c.user}">saved ✓</span>
+      </div>
+    </div>`;
+  $("#overlay").classList.add("open");$("#drawer").classList.add("open");
+}
+function closeDrawer(){$("#overlay").classList.remove("open");$("#drawer").classList.remove("open");}
+let saveT;
+function saveNote(k,v,msgId){store.set(k,v);const m=document.getElementById(msgId);if(m){m.classList.add("show");clearTimeout(saveT);saveT=setTimeout(()=>m.classList.remove("show"),1200);}}
+
+function renderEmployees(){
+  $("#egrid").innerHTML=TEAM.map((e,i)=>{
+    const name=e.f+" "+e.l;
+    const email=(e.f+"."+e.l).toLowerCase().replace(/[^a-z.]/g,"")+"@momentumaccounting.com";
+    const roleKey="role_"+e.id;const role=store.get(roleKey,e.role);
+    const nClients=CLIENTS.filter(c=>c.lead===name).length;
+    const tw="https://momentumaccounting.teamwork.com/app/people/"+e.id;
+    return `<div class="ecard">
+      <div class="top">
+        <div class="eav" style="background:${i%2?'var(--denim)':'var(--pink)'}">${initials(name)}</div>
+        <div style="flex:1">
+          <div class="en">${name}</div>
+          <input class="er" style="border:none;background:none;font-family:inherit;width:100%;padding:0" value="${role}" oninput="saveNote('${roleKey}',this.value,'rs_${e.id}')">
+          <div class="loc">${e.loc}</div>
+          <div class="em">${email}</div>
+          ${e.pi?`<span class="pi">${e.pi}</span>`:''}
+          <span class="savedmsg" id="rs_${e.id}">saved ✓</span>
+        </div>
+      </div>
+      <div class="work">
+        ${e.works?`<div class="row"><b>Style:</b> ${e.works}</div>`:''}
+        ${e.comm?`<div class="row"><b>Best way to reach me:</b> ${e.comm}</div>`:''}
+      </div>
+      <div class="files"><div class="flbl">Personal files</div>
+        <div class="chips">
+          <a class="chip" href="#" onclick="event.preventDefault()">Contract</a>
+          <a class="chip" href="#" onclick="event.preventDefault()">Reviews</a>
+          <a class="chip" href="#" onclick="event.preventDefault()">PTO / Leave</a>
+          <a class="chip" href="#" onclick="event.preventDefault()">Payroll</a>
+          <a class="chip" href="${tw}" target="_blank">Teamwork ↗</a>
+        </div>
+      </div>
+      <div class="assigned">Leads <b>${nClients}</b> client${nClients===1?"":"s"}</div>
+    </div>`;
+  }).join("");
+}
+
+function portalCreds(c){return {u:c.user,p:"mom-"+String(c.id).slice(-4)};}
+function renderDemoHelp(){
+  const ex=CLIENTS.find(c=>c.live)||CLIENTS[0];const cr=portalCreds(ex);
+  $("#demoHelp").innerHTML=`<b>Demo credentials</b> (prototype only)<br>Username = client slug, password = <code>mom-XXXX</code>.<br>Try the live client: user <code>${cr.u}</code> · pass <code>${cr.p}</code>.`;
+}
+function portalLogin(){
+  const u=$("#pu").value.trim().toLowerCase(),p=$("#pp").value.trim();
+  const c=CLIENTS.find(x=>x.user===u);
+  if(!c||portalCreds(c).p!==p){$("#perr").textContent="Invalid username or password.";return;}
+  $("#perr").textContent="";$("#ploginWrap").classList.add("hidden");
+  const ring=c.close>=100?"#1c8a5b":(c.close>=55?"#febe10":"#c62d42");
+  const dash=$("#pdash");dash.classList.add("active");
+  let kpiHtml,noteHtml,rightHtml;
+  if(c.live){const L=c.live;
+    kpiHtml=`<div class="kpi accent"><div class="lbl">Cash on hand</div><div class="val">${money(L.cash)}</div><div class="sub">as of ${L.asOf}</div></div>
+      <div class="kpi"><div class="lbl">A/R (owed to you)</div><div class="val">${money(L.ar)}</div></div>
+      <div class="kpi"><div class="lbl">Credit cards</div><div class="val" style="color:#c62d42">${money(L.cc)}</div></div>
+      <div class="kpi"><div class="lbl">Net income YTD</div><div class="val" style="color:${L.netYTD>=0?'#1c8a5b':'#c62d42'}">${money(L.netYTD)}</div></div>
+      <div class="kpi"><div class="lbl">Current ratio</div><div class="val">${L.currentRatio}</div></div>`;
+    noteHtml=`<div class="livemsg" style="margin-top:14px">&#9679; These are your real QuickBooks figures as of ${L.asOf}.</div>`;
+    rightHtml=`<h3 style="margin-top:6px">Who owes you</h3><ul class="tasklist">${L.aging.map(a=>`<li>${a.n}<span class="td">${money(a.a)}</span></li>`).join("")}</ul>`;
+  } else if(c.driveFin){const D=c.driveFin;
+    kpiHtml=`<div class="kpi accent"><div class="lbl">Revenue (mo)</div><div class="val">${D.moRev!=null?money(D.moRev):money(Math.round(D.ytdRev/6))}</div><div class="sub">${D.asOf}</div></div>
+      <div class="kpi"><div class="lbl">Revenue YTD</div><div class="val">${money(D.ytdRev)}</div></div>
+      <div class="kpi"><div class="lbl">Net income YTD</div><div class="val" style="color:${(D.ytdNet||0)>=0?'#1c8a5b':'#c62d42'}">${D.ytdNet!=null?money(D.ytdNet):'—'}</div></div>
+      <div class="kpi"><div class="lbl">Gross profit YTD</div><div class="val">${D.grossYTD!=null?money(D.grossYTD):'—'}</div></div>
+      <div class="kpi"><div class="lbl">Margin YTD</div><div class="val">${D.ytdNet!=null?Math.round(D.ytdNet/D.ytdRev*100)+'%':'—'}</div></div>`;
+    noteHtml=`<div class="livemsg" style="margin-top:14px">&#9679; Real figures from your month-end statement (${D.asOf}).</div>`;
+    rightHtml=`<h3 style="margin-top:6px">Statement</h3><ul class="tasklist"><li>${D.label}<span class="td"><a href="https://docs.google.com/spreadsheets/d/${D.fileId}/edit" target="_blank">Open</a></span></li></ul>`;
+  } else {
+    kpiHtml=`<div class="kpi accent"><div class="lbl">Revenue (mo)</div><div class="val">${money(c.rev)}</div></div>
+      <div class="kpi"><div class="lbl">Net income</div><div class="val" style="color:${c.net>=0?'#1c8a5b':'#c62d42'}">${money(c.net)}</div></div>
+      <div class="kpi"><div class="lbl">Cash on hand</div><div class="val">${money(c.cash)}</div></div>
+      <div class="kpi"><div class="lbl">A/R</div><div class="val">${money(c.ar)}</div></div>
+      <div class="kpi"><div class="lbl">A/P</div><div class="val">${money(c.ap)}</div></div>`;
+    noteHtml=`<div class="samp" style="margin-top:14px">&#9888; Prototype with sample data. A live portal pulls this client's real numbers from ${getSys(c)} or the month-end statements in Drive.</div>`;
+    rightHtml=`<h3 style="margin-top:6px">Recent statements</h3><ul class="tasklist">
+        <li>June 2026 — P&L<span class="td"><a href="#" onclick="event.preventDefault()">View</a></span></li>
+        <li>June 2026 — Balance Sheet<span class="td"><a href="#" onclick="event.preventDefault()">View</a></span></li>
+        <li>Q2 2026 — Cash Flow<span class="td"><a href="#" onclick="event.preventDefault()">View</a></span></li></ul>`;
+  }
+  dash.innerHTML=`
+    <div class="pbar"><div class="mark">M.</div><div><h2>${c.name}<span class="badge ${getSys(c)==="Xero"?"b-xero":"b-qbo"}">${getSys(c)}</span>${(c.live||c.driveFin)?'<span class="badge b-live">Live</span>':''}</h2>
+    <div style="font-size:12px;color:var(--grey)">Your financial dashboard · powered by Momentum Accounting</div></div>
+    <button class="logout" onclick="portalLogout()">Log out</button></div>
+    <div class="kpis">${kpiHtml}</div>
+    <div class="cols">
+      <div class="card"><h3>Revenue trend (illustrative)</h3><canvas id="pTrend"></canvas></div>
+      <div class="card"><h3>Month-end status</h3>
+        <div class="xen" style="margin-bottom:14px"><div class="ring" style="background:${ring}">${c.close}%</div>
+        <div><b>${c.close>=100?"Books closed & reviewed":"Close in progress"}</b><div style="font-size:11.5px;color:var(--grey)">Your Momentum team is on it.</div></div></div>
+        ${rightHtml}
+      </div>
+    </div>
+    ${noteHtml}`;
+  let months,data;
+  if(c.driveFin&&c.driveFin.months){months=c.driveFin.months;data=c.driveFin.rev;}
+  else{const base=c.live?Math.max(c.live.ar*3,20000):c.rev;months=["Jan","Feb","Mar","Apr","May","Jun"];data=months.map((m,k)=>Math.round(base*(0.8+rng(c.id+k)*0.4)));}
+  new Chart($("#pTrend"),{type:"line",data:{labels:months,datasets:[{data,borderColor:"#cd177b",backgroundColor:"rgba(205,23,123,.12)",fill:true,tension:.35,borderWidth:2,pointBackgroundColor:"#cd177b"}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:v=>"$"+(v/1000)+"k"}}}}});
+}
+function portalLogout(){$("#pdash").classList.remove("active");$("#pdash").innerHTML="";$("#ploginWrap").classList.remove("hidden");$("#pu").value="";$("#pp").value="";}
+
+renderOverview();renderLeadFilter();renderClients();renderEmployees();renderDemoHelp();
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer();});
+</script>
+</body>
+</html>
